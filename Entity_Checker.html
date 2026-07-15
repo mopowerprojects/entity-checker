@@ -739,6 +739,17 @@ function getContext(plainText, char, radius = 20) {
   return `"${snippet}"`;
 }
 
+function getContextAt(plainText, char, idx, radius = 20) {
+  const start = Math.max(0, idx - radius);
+  const end = Math.min(plainText.length, idx + char.length + radius);
+  let snippet = (start > 0 ? '...' : '');
+  snippet += escapeHtml(plainText.slice(start, idx));
+  snippet += `<mark>${escapeHtml(char)}</mark>`;
+  snippet += escapeHtml(plainText.slice(idx + char.length, end));
+  snippet += (end < plainText.length ? '...' : '');
+  return `"${snippet}"`;
+}
+
 // ── Check entities in a file ───────────────────
 function checkEntities(xhtmlText, entityList) {
   const textOutsideTags = xhtmlText.replace(/<[^>]+>/g, '');
@@ -761,8 +772,14 @@ function checkEntities(xhtmlText, entityList) {
   // Check 1 — raw unencoded characters (including a standalone &)
   for (const entity of entityList) {
     if (!entity.name) continue;
-    if (textOnly.indexOf(entity.name) === -1) continue;
-    hits.push({ ...entity, context: getContext(textOnly, entity.name) });
+
+    let searchFrom = 0;
+    while (true) {
+      const idx = textOnly.indexOf(entity.name, searchFrom);
+      if (idx === -1) break;
+      hits.push({ ...entity, context: getContextAt(textOnly, entity.name, idx) });
+      searchFrom = idx + entity.name.length;
+    }
   }
 
   // Check 2 / Check 3 — encoded tokens: malformed, or valid but not in the Excel list
@@ -770,12 +787,10 @@ function checkEntities(xhtmlText, entityList) {
   const knownHex      = new Set(entityList.map(e => e.hex).filter(Boolean));
   const knownNamed    = new Set(entityList.map(e => e.char).filter(Boolean));
 
-  const seen = new Set();
   let m;
   while ((m = tokenPattern.exec(textOutsideTags)) !== null) {
     const token = m[0];
-    if (seen.has(token)) continue;
-    seen.add(token);
+    const idx = m.index;
 
     if (!isValidToken(token)) {
       hits.push({
@@ -784,7 +799,7 @@ function checkEntities(xhtmlText, entityList) {
         hex: '—',
         char: '—',
         malformed: true,
-        context: getContext(textOutsideTags, token)
+        context: getContextAt(textOutsideTags, token, idx)
       });
       continue;
     }
@@ -796,7 +811,7 @@ function checkEntities(xhtmlText, entityList) {
         hex: '—',
         char: '—',
         notInList: true,
-        context: getContext(textOutsideTags, token)
+        context: getContextAt(textOutsideTags, token, idx)
       });
     }
   }
