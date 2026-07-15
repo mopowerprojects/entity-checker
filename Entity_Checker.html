@@ -31,12 +31,13 @@ body {
   background: #f5f5f5;
   color: var(--gray-900);
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-header {
   background: white;
   border-bottom: 1px solid var(--gray-200);
-  border-left: 4px solid var(--orange);
   padding: 16px 32px;
   display: flex;
   align-items: center;
@@ -105,15 +106,31 @@ body {
   color: #166534;
 }
 
+.entity-status.loaded::before {
+  content: '●';
+  margin-right: 6px;
+  color: #16a34a;
+}
+
 .entity-status.error {
   background: #fee2e2;
   color: #991b1b;
 }
 
 .main-content {
-  max-width: 960px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 32px 24px;
+  flex: 1;
+  width: 100%;
+}
+
+.step-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .step-card {
@@ -175,15 +192,27 @@ body {
   color: white;
 }
 
+.browse-btn-filled {
+  background: var(--orange);
+  color: white;
+}
+
+.browse-btn-filled:hover {
+  background: #ea6c00;
+}
+
 .selected-path {
-  margin-top: 10px;
   font-size: 12px;
-  color: var(--gray-600);
+  color: var(--orange);
+  font-weight: 600;
   font-family: monospace;
-  background: var(--gray-50);
-  padding: 8px 12px;
-  border-radius: 6px;
+  background: var(--orange-light);
+  padding: 10px 14px;
+  border-radius: 8px;
   border: 1px solid var(--gray-200);
+  flex: 1;
+  min-width: 240px;
+  text-align: right;
   display: none;
 }
 
@@ -231,14 +260,14 @@ body {
   padding: 24px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--gray-200);
-  border-top: 4px solid;
+  border-left: 4px solid;
   text-align: center;
 }
 
-.summary-card.files { border-top-color: var(--blue); }
-.summary-card.chars { border-top-color: var(--purple); }
-.summary-card.entities { border-top-color: var(--red); }
-.summary-card.entities.clean { border-top-color: var(--green); }
+.summary-card.files { border-left-color: var(--blue); }
+.summary-card.chars { border-left-color: var(--purple); }
+.summary-card.entities { border-left-color: var(--red); }
+.summary-card.entities.clean { border-left-color: var(--green); }
 
 .summary-number {
   font-size: 40px;
@@ -272,31 +301,36 @@ body {
 
 .results-title-wrap {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .results-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .results-count-badge {
-  background: var(--gray-100);
-  color: var(--gray-600);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 12px;
+  background: none;
+  color: var(--gray-400);
+  font-size: 12px;
+  font-weight: 400;
+  padding: 0;
+  border-radius: 0;
 }
 
 .search-input {
-  padding: 8px 14px;
+  padding: 8px 14px 8px 34px;
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   font-size: 13px;
   outline: none;
   width: 220px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  background-size: 15px;
 }
 
 .search-input:focus {
@@ -357,8 +391,8 @@ body {
 }
 
 .file-badge.issues {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--orange-light);
+  color: var(--orange);
 }
 
 .file-badge.clean {
@@ -430,6 +464,32 @@ body {
   padding: 0 2px;
 }
 
+.remark {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.remark-unencoded {
+  background: var(--orange-light);
+  color: var(--orange);
+}
+
+.remark-not-in-list {
+  background: #fff3cd;
+  color: #b45309;
+}
+
+.remark-malformed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .clean-msg {
   padding: 20px;
   text-align: center;
@@ -487,12 +547,21 @@ input[type="file"] { display: none; }
 
 /* Footer */
 .app-footer {
-  text-align: center;
-  padding: 24px;
-  color: var(--gray-400);
-  font-size: 12px;
+  background: white;
   border-top: 1px solid var(--gray-200);
-  margin-top: 40px;
+  padding: 20px 32px;
+}
+
+.footer-brand {
+  font-weight: 700;
+  color: var(--orange);
+  font-size: 14px;
+}
+
+.footer-copyright {
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-top: 2px;
 }
 
 @media (max-width: 640px) {
@@ -515,12 +584,12 @@ input[type="file"] { display: none; }
     </div>
     <div>
       <div class="app-title">Entity Checker</div>
-      <div class="app-subtitle">Scan XHTML files for unencoded HTML entities</div>
+      <div class="app-subtitle">Professional Validation Suite</div>
     </div>
   </div>
   <div class="app-header-right">
     <input type="file" id="entity-file-input" accept=".xlsx" style="display:none"/>
-    <button class="browse-btn" onclick="document.getElementById('entity-file-input').click()">Select Entities_List.xlsx</button>
+    <button class="browse-btn" onclick="document.getElementById('entity-file-input').click()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Select Entities_List.xlsx</button>
     <div class="entity-status loading" id="entityStatus">No entity list selected</div>
   </div>
 </header>
@@ -532,15 +601,17 @@ input[type="file"] { display: none; }
       <div class="step-number">01</div>
       <div>
         <div class="step-title">Select XHTML Folder</div>
-        <div class="step-subtitle">Choose the folder containing your .xhtml files</div>
+        <div class="step-subtitle">Choose the root directory containing your source documents for unencoded entity scanning.</div>
       </div>
     </div>
-    <button class="browse-btn" id="selectFolderBtn">Browse Folder</button>
-    <input type="file" id="xhtml-folder" webkitdirectory multiple>
-    <div class="selected-path" id="folderPath"></div>
+    <div class="step-body">
+      <button class="browse-btn browse-btn-filled" id="selectFolderBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Browse Folder</button>
+      <input type="file" id="xhtml-folder" webkitdirectory multiple>
+      <div class="selected-path" id="folderPath"></div>
+    </div>
   </div>
 
-  <button class="run-btn" id="checkBtn" disabled>Check Entities</button>
+  <button class="run-btn" id="checkBtn" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Check Entities</button>
 
   <div id="summarySection"></div>
 
@@ -548,7 +619,12 @@ input[type="file"] { display: none; }
 
 </div>
 
-<div class="app-footer">Entity Checker &mdash; EPUB Validator Tools</div>
+<div class="app-footer">
+  <div>
+    <div class="footer-brand">Entity Checker Tool</div>
+    <div class="footer-copyright">&copy; 2025 MoPower Information Services Pvt Ltd. All rights reserved.</div>
+  </div>
+</div>
 
 <script>
 // ── State ──────────────────────────────────────
@@ -664,27 +740,66 @@ function getContext(plainText, char, radius = 20) {
 
 // ── Check entities in a file ───────────────────
 function checkEntities(xhtmlText, entityList) {
-  // Strip HTML tags completely (no space replacement)
-  const textOnly = xhtmlText.replace(/<[^>]+>/g, '');
+  const textOutsideTags = xhtmlText.replace(/<[^>]+>/g, '');
+
+  // Any &#x..., &#..., or &name; -shaped token, valid or malformed.
+  const tokenPattern = /&#x[0-9A-Za-z]*;|&#[0-9A-Za-z]*;|&[a-zA-Z][a-zA-Z0-9]*;/g;
+
+  function isValidToken(token) {
+    if (/^&#x/i.test(token)) return /^&#x[0-9A-Fa-f]+;$/.test(token);
+    if (/^&#/.test(token))   return /^&#[0-9]+;$/.test(token);
+    return true; // named form already matched strict syntax
+  }
+
+  // Plain text = tags stripped, then every entity-shaped token (valid or
+  // malformed) stripped too — a lone & left behind is a raw unencoded &.
+  const textOnly = textOutsideTags.replace(tokenPattern, '');
 
   const hits = [];
 
+  // Check 1 — raw unencoded characters (including a standalone &)
   for (const entity of entityList) {
     if (!entity.name) continue;
-
-    // Check if raw character exists in text content
     if (textOnly.indexOf(entity.name) === -1) continue;
+    hits.push({ ...entity, context: getContext(textOnly, entity.name) });
+  }
 
-    // Check if already properly encoded in raw HTML
-    const alreadyEncoded =
-      (entity.decimal && xhtmlText.includes(entity.decimal)) ||
-      (entity.hex && xhtmlText.includes(entity.hex)) ||
-      (entity.char && xhtmlText.includes(entity.char));
+  // Check 2 / Check 3 — encoded tokens: malformed, or valid but not in the Excel list
+  const knownDecimals = new Set(entityList.map(e => e.decimal).filter(Boolean));
+  const knownHex      = new Set(entityList.map(e => e.hex).filter(Boolean));
+  const knownNamed    = new Set(entityList.map(e => e.char).filter(Boolean));
 
-    if (!alreadyEncoded) {
-      hits.push({ ...entity, context: getContext(textOnly, entity.name) });
+  const seen = new Set();
+  let m;
+  while ((m = tokenPattern.exec(textOutsideTags)) !== null) {
+    const token = m[0];
+    if (seen.has(token)) continue;
+    seen.add(token);
+
+    if (!isValidToken(token)) {
+      hits.push({
+        name: '—',
+        decimal: token,
+        hex: '—',
+        char: '—',
+        malformed: true,
+        context: getContext(textOutsideTags, token)
+      });
+      continue;
+    }
+
+    if (!knownDecimals.has(token) && !knownHex.has(token) && !knownNamed.has(token)) {
+      hits.push({
+        name: '—',
+        decimal: token,
+        hex: '—',
+        char: '—',
+        notInList: true,
+        context: getContext(textOutsideTags, token)
+      });
     }
   }
+
   return hits;
 }
 
@@ -790,11 +905,20 @@ function renderResults(results) {
               <th>Hex</th>
               <th>Named</th>
               <th>Context</th>
+              <th>Remarks</th>
             </tr>
           </thead>
           <tbody>
       `;
       for (const hit of hits) {
+        let remarksCell;
+        if (hit.malformed) {
+          remarksCell = `<span class="remark remark-malformed">Malformed</span>`;
+        } else if (hit.notInList) {
+          remarksCell = `<span class="remark remark-not-in-list">Not in list</span>`;
+        } else {
+          remarksCell = `<span class="remark remark-unencoded">Unencoded</span>`;
+        }
         html += `
           <tr>
             <td class="entity-char-cell">${escapeHtml(hit.name)}</td>
@@ -802,6 +926,7 @@ function renderResults(results) {
             <td class="entity-code-cell">${escapeHtml(String(hit.hex))}</td>
             <td class="entity-code-cell">${escapeHtml(String(hit.char))}</td>
             <td class="context-cell">${hit.context || ''}</td>
+            <td class="remarks-cell">${remarksCell}</td>
           </tr>
         `;
       }
