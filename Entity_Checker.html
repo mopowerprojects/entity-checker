@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entity Checker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --orange: #f97316;
+  --orange-light: #fff7ed;
+  --blue: #3b82f6;
+  --purple: #8b5cf6;
+  --red: #ef4444;
+  --green: #22c55e;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-400: #9ca3af;
+  --gray-600: #4b5563;
+  --gray-900: #111827;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f5f5f5;
+  color: var(--gray-900);
+  min-height: 100vh;
+}
+
+.app-header {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  border-left: 4px solid var(--orange);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo {
+  width: 36px;
+  height: 36px;
+  background: var(--orange);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.app-logo svg { width: 20px; height: 20px; }
+
+.app-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.app-subtitle {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.entity-status {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.entity-status.loading {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.entity-status.loaded {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.entity-status.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.main-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.step-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  background: var(--orange);
+  border-radius: 50%;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.step-subtitle {
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-top: 2px;
+}
+
+.browse-btn {
+  padding: 8px 20px;
+  border: 2px solid var(--orange);
+  border-radius: 8px;
+  background: white;
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.browse-btn:hover {
+  background: var(--orange);
+  color: white;
+}
+
+.selected-path {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--gray-600);
+  font-family: monospace;
+  background: var(--gray-50);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--gray-200);
+  display: none;
+}
+
+.selected-path.visible { display: block; }
+
+.run-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--orange);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 24px;
+}
+
+.run-btn:hover:not(:disabled) {
+  background: #ea6c00;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+}
+
+.run-btn:disabled {
+  background: var(--gray-200);
+  color: var(--gray-400);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  border-top: 4px solid;
+  text-align: center;
+}
+
+.summary-card.files { border-top-color: var(--blue); }
+.summary-card.chars { border-top-color: var(--purple); }
+.summary-card.entities { border-top-color: var(--red); }
+.summary-card.entities.clean { border-top-color: var(--green); }
+
+.summary-number {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.summary-card.files .summary-number { color: var(--blue); }
+.summary-card.chars .summary-number { color: var(--purple); }
+.summary-card.entities .summary-number { color: var(--red); }
+.summary-card.entities.clean .summary-number { color: var(--green); }
+
+.summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-400);
+}
+
+/* Results */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.results-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.results-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.results-count-badge {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.search-input {
+  padding: 8px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  width: 220px;
+}
+
+.search-input:focus {
+  border-color: var(--orange);
+}
+
+/* File Cards */
+.file-card {
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--gray-200);
+  border-left: 4px solid;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.file-card.has-issues { border-left-color: var(--red); }
+.file-card.is-clean   { border-left-color: var(--green); }
+
+.file-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.file-card-header:hover { background: var(--gray-50); }
+
+.file-toggle {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--orange);
+  min-width: 16px;
+  text-align: center;
+  transition: transform 0.15s;
+}
+
+.file-toggle.open { transform: rotate(90deg); }
+
+.file-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-900);
+  word-break: break-all;
+}
+
+.file-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.file-badge.issues {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.file-badge.clean {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.file-card-body {
+  border-top: 1px solid var(--gray-200);
+  overflow: hidden;
+}
+
+.file-card-body.collapsed { display: none; }
+
+/* Entity Table */
+.entity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.entity-table th {
+  background: var(--gray-50);
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-400);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.entity-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 13px;
+}
+
+.entity-table tr:last-child td { border-bottom: none; }
+.entity-table tr:nth-child(even) td { background: var(--gray-50); }
+
+.entity-char-cell {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--orange);
+  text-align: center;
+  width: 60px;
+}
+
+.entity-code-cell {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+.context-cell {
+  font-size: 12px;
+  font-style: italic;
+  color: #4b5563;
+  max-width: 220px;
+  word-break: break-word;
+}
+
+.context-cell mark {
+  background: #fff3cd;
+  color: #b45309;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.clean-msg {
+  padding: 20px;
+  text-align: center;
+  color: #166534;
+  font-size: 13px;
+}
+
+.status-message {
+  text-align: center;
+  color: var(--gray-400);
+  font-size: 13px;
+  padding: 24px;
+}
+
+.no-match-message {
+  text-align: center;
+  color: var(--gray-400);
+  font-size: 13px;
+  padding: 24px;
+}
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.spinner-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+}
+
+.spinner-wrap .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--orange);
+  margin-right: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+input[type="file"] { display: none; }
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--gray-400);
+  font-size: 12px;
+  border-top: 1px solid var(--gray-200);
+  margin-top: 40px;
+}
+
+@media (max-width: 640px) {
+  .summary-cards { grid-template-columns: 1fr; }
+  .app-header { flex-direction: column; align-items: flex-start; }
+  .results-header { flex-direction: column; align-items: stretch; }
+  .search-input { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header-left">
+    <div class="app-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="app-title">Entity Checker</div>
+      <div class="app-subtitle">Scan XHTML files for unencoded HTML entities</div>
+    </div>
+  </div>
+  <div class="app-header-right">
+    <input type="file" id="entity-file-input" accept=".xlsx" style="display:none"/>
+    <button class="browse-btn" onclick="document.getElementById('entity-file-input').click()">Select Entities_List.xlsx</button>
+    <div class="entity-status loading" id="entityStatus">No entity list selected</div>
+  </div>
+</header>
+
+<div class="main-content">
+
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">01</div>
+      <div>
+        <div class="step-title">Select XHTML Folder</div>
+        <div class="step-subtitle">Choose the folder containing your .xhtml files</div>
+      </div>
+    </div>
+    <button class="browse-btn" id="selectFolderBtn">Browse Folder</button>
+    <input type="file" id="xhtml-folder" webkitdirectory multiple>
+    <div class="selected-path" id="folderPath"></div>
+  </div>
+
+  <button class="run-btn" id="checkBtn" disabled>Check Entities</button>
+
+  <div id="summarySection"></div>
+
+  <div id="resultsSection"></div>
+
+</div>
+
+<div class="app-footer">Entity Checker &mdash; EPUB Validator Tools</div>
+
+<script>
+// ── State ──────────────────────────────────────
+let selectedXhtmlFiles = [];
+let entityList = [];
+let entityListLoaded = false;
+let lastResults = [];
+
+const entityStatusEl = document.getElementById('entityStatus');
+const folderPathEl   = document.getElementById('folderPath');
+const checkBtn        = document.getElementById('checkBtn');
+const summarySection  = document.getElementById('summarySection');
+const resultsSection  = document.getElementById('resultsSection');
+
+function updateCheckBtnState() {
+  checkBtn.disabled = !(selectedXhtmlFiles.length > 0 && entityListLoaded);
+}
+
+function setEntityStatus(mode, text) {
+  entityStatusEl.className = 'entity-status ' + mode;
+  entityStatusEl.textContent = text;
+}
+
+// ── Step 1: Folder picker ──────────────────────
+const folderInput = document.getElementById('xhtml-folder');
+document.getElementById('selectFolderBtn').addEventListener('click', () => folderInput.click());
+
+folderInput.addEventListener('change', () => {
+  const allFiles = Array.from(folderInput.files);
+  selectedXhtmlFiles = allFiles.filter(f => /\.xhtml$/i.test(f.name));
+
+  folderPathEl.classList.add('visible');
+  if (selectedXhtmlFiles.length === 0) {
+    folderPathEl.textContent = 'No .xhtml files found in selected folder';
+  } else {
+    const folderName = selectedXhtmlFiles[0].webkitRelativePath.split('/')[0];
+    folderPathEl.textContent = `${folderName}/  —  ${selectedXhtmlFiles.length} .xhtml file(s) found`;
+  }
+  updateCheckBtnState();
+});
+
+// ── Load entity list via file picker ───────────────────────────
+function checkEnableRun() {
+  updateCheckBtnState();
+}
+
+document.getElementById('entity-file-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  setEntityStatus('loading', `Loading ${file.name}...`);
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const workbook = XLSX.read(e.target.result, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+      entityList = rows
+        .filter(r => r['Entity Name'])
+        .map(r => ({
+          name: String(r['Entity Name']),
+          decimal: r['Decimal'] || '',
+          hex: r['Hexadecimal'] || '',
+          char: r['Character'] || ''
+        }))
+        .filter(e => e.name.length > 0);
+
+      entityListLoaded = entityList.length > 0;
+
+      // Show loaded status
+      if (entityListLoaded) {
+        setEntityStatus('loaded', entityList.length + ' entities loaded (' + file.name + ')');
+      } else {
+        setEntityStatus('error', 'No entities found in ' + file.name);
+      }
+
+      // Enable run button if folder also selected
+      checkEnableRun();
+    } catch (err) {
+      console.error(err);
+      entityList = [];
+      entityListLoaded = false;
+      setEntityStatus('error', 'Failed to read ' + file.name);
+      checkEnableRun();
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+// ── Read XHTML file as text ────────────────────
+function readFileAsText(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsText(file);
+  });
+}
+
+// ── Context snippet around an entity hit ───────
+function getContext(plainText, char, radius = 20) {
+  const idx = plainText.indexOf(char);
+  if (idx === -1) return '';
+  const start = Math.max(0, idx - radius);
+  const end = Math.min(plainText.length, idx + char.length + radius);
+  let snippet = (start > 0 ? '...' : '');
+  snippet += escapeHtml(plainText.slice(start, idx));
+  snippet += `<mark>${escapeHtml(char)}</mark>`;
+  snippet += escapeHtml(plainText.slice(idx + char.length, end));
+  snippet += (end < plainText.length ? '...' : '');
+  return `"${snippet}"`;
+}
+
+// ── Check entities in a file ───────────────────
+function checkEntities(xhtmlText, entityList) {
+  // Strip HTML tags completely (no space replacement)
+  const textOnly = xhtmlText.replace(/<[^>]+>/g, '');
+
+  const hits = [];
+
+  for (const entity of entityList) {
+    if (!entity.name) continue;
+
+    // Check if raw character exists in text content
+    if (textOnly.indexOf(entity.name) === -1) continue;
+
+    // Check if already properly encoded in raw HTML
+    const alreadyEncoded =
+      (entity.decimal && xhtmlText.includes(entity.decimal)) ||
+      (entity.hex && xhtmlText.includes(entity.hex)) ||
+      (entity.char && xhtmlText.includes(entity.char));
+
+    if (!alreadyEncoded) {
+      hits.push({ ...entity, context: getContext(textOnly, entity.name) });
+    }
+  }
+  return hits;
+}
+
+// ── Main check function ────────────────────────
+async function runCheck() {
+  checkBtn.disabled = true;
+  checkBtn.innerHTML = '<span class="spinner"></span>Checking...';
+  summarySection.innerHTML = '';
+  resultsSection.innerHTML = `
+    <div class="spinner-wrap"><div class="spinner"></div></div>
+  `;
+
+  try {
+    const results = [];
+    let totalChars = 0;
+
+    for (const file of selectedXhtmlFiles) {
+      const text = await readFileAsText(file);
+      totalChars += text.length;
+      const hits = checkEntities(text, entityList);
+      results.push({
+        fileName: file.webkitRelativePath || file.name,
+        hits
+      });
+    }
+
+    lastResults = results;
+    renderSummary(results, totalChars);
+    renderResults(results);
+  } catch (err) {
+    console.error(err);
+    resultsSection.innerHTML = `<p class="status-message">Error: ${escapeHtml(err.message)}</p>`;
+  } finally {
+    checkBtn.disabled = false;
+    checkBtn.textContent = 'Check Entities';
+    updateCheckBtnState();
+  }
+}
+
+document.getElementById('checkBtn').addEventListener('click', runCheck);
+
+// ── Summary cards ───────────────────────────────
+function renderSummary(results, totalChars) {
+  const totalEntities = results.reduce((sum, r) => sum + r.hits.length, 0);
+  const entitiesClass = totalEntities > 0 ? 'entities' : 'entities clean';
+
+  summarySection.innerHTML = `
+    <div class="summary-cards">
+      <div class="summary-card files">
+        <div class="summary-number">${results.length.toLocaleString()}</div>
+        <div class="summary-label">Total Files</div>
+      </div>
+      <div class="summary-card chars">
+        <div class="summary-number">${totalChars.toLocaleString()}</div>
+        <div class="summary-label">Chars Checked</div>
+      </div>
+      <div class="summary-card ${entitiesClass}">
+        <div class="summary-number">${totalEntities.toLocaleString()}</div>
+        <div class="summary-label">Entities Found</div>
+      </div>
+    </div>
+  `;
+}
+
+// ── Render results ──────────────────────────────
+function renderResults(results) {
+  const filesWithHits = results.filter(r => r.hits.length > 0);
+
+  let html = `
+    <div class="results-header">
+      <div class="results-title-wrap">
+        <span class="results-title">Results</span>
+        <span class="results-count-badge">${results.length} file(s)</span>
+      </div>
+      <input type="text" class="search-input" id="fileSearch" placeholder="Search files...">
+    </div>
+    <div id="fileCardList">
+  `;
+
+  for (const file of results) {
+    const hits = file.hits || [];
+    const hasHits = hits.length > 0;
+
+    html += `
+      <div class="file-card ${hasHits ? 'has-issues' : 'is-clean'}" data-filename="${escapeHtml(file.fileName.toLowerCase())}">
+        <div class="file-card-header" onclick="toggleFile(this)">
+          <span class="file-toggle">&#9656;</span>
+          <span class="file-name">${escapeHtml(file.fileName)}</span>
+          <span class="file-badge ${hasHits ? 'issues' : 'clean'}">
+            ${hasHits ? hits.length + ' entit' + (hits.length === 1 ? 'y' : 'ies') : 'Clean'}
+          </span>
+        </div>
+        <div class="file-card-body collapsed">
+    `;
+
+    if (hasHits) {
+      html += `
+        <table class="entity-table">
+          <thead>
+            <tr>
+              <th>Character</th>
+              <th>Decimal</th>
+              <th>Hex</th>
+              <th>Named</th>
+              <th>Context</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      for (const hit of hits) {
+        html += `
+          <tr>
+            <td class="entity-char-cell">${escapeHtml(hit.name)}</td>
+            <td class="entity-code-cell">${escapeHtml(String(hit.decimal))}</td>
+            <td class="entity-code-cell">${escapeHtml(String(hit.hex))}</td>
+            <td class="entity-code-cell">${escapeHtml(String(hit.char))}</td>
+            <td class="context-cell">${hit.context || ''}</td>
+          </tr>
+        `;
+      }
+      html += `</tbody></table>`;
+    } else {
+      html += `<div class="clean-msg">No unencoded entities found in this file.</div>`;
+    }
+
+    html += `</div></div>`;
+  }
+
+  html += `</div><p class="no-match-message" id="noMatchMessage" hidden>No files match your search.</p>`;
+
+  resultsSection.innerHTML = html;
+
+  document.getElementById('fileSearch').addEventListener('input', filterFileCards);
+}
+
+// ── Search filter ───────────────────────────────
+function filterFileCards() {
+  const term = document.getElementById('fileSearch').value.trim().toLowerCase();
+  const cards = document.querySelectorAll('#fileCardList .file-card');
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const match = !term || card.dataset.filename.includes(term);
+    card.hidden = !match;
+    if (match) visibleCount++;
+  });
+
+  document.getElementById('noMatchMessage').hidden = visibleCount !== 0;
+}
+
+// ── Toggle file collapse ───────────────────────
+function toggleFile(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.file-toggle');
+  body.classList.toggle('collapsed');
+  toggle.classList.toggle('open', !body.classList.contains('collapsed'));
+}
+
+// ── HTML escaping ──────────────────────────────
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
