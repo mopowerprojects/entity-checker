@@ -614,6 +614,80 @@ input[type="file"] { display: none; }
   margin-top: 2px;
 }
 
+/* Notice popup */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  animation: fadeInOverlay 0.25s ease forwards;
+}
+
+@keyframes fadeInOverlay {
+  to { opacity: 1; }
+}
+
+.popup-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 28px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-12px);
+  opacity: 0;
+  animation: fadeInCard 0.3s ease forwards 0.05s;
+}
+
+@keyframes fadeInCard {
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.popup-title {
+  font-weight: 700;
+  font-size: 18px;
+  text-align: center;
+  margin-bottom: 16px;
+  color: var(--gray-900);
+}
+
+.popup-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--gray-600);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.popup-thanks {
+  font-size: 14px;
+  text-align: center;
+  color: var(--gray-600);
+  margin-bottom: 20px;
+}
+
+.popup-ok-btn {
+  display: block;
+  margin: 0 auto;
+  padding: 10px 32px;
+  background: var(--orange);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.popup-ok-btn:hover {
+  background: #ea6c00;
+}
+
 @media (max-width: 640px) {
   .summary-cards { grid-template-columns: 1fr; }
   .app-header { flex-direction: column; align-items: flex-start; }
@@ -623,6 +697,15 @@ input[type="file"] { display: none; }
 </style>
 </head>
 <body>
+
+<div class="popup-overlay" id="noticeOverlay">
+  <div class="popup-card">
+    <div class="popup-title">அறிவிப்பு</div>
+    <div class="popup-body">Excel வசதி நீக்கப்பட்டுவிட்டது. இனி நீங்கள் Excel File இணைக்கவோ அல்லது பதிவேற்றவோ தேவையில்லை. இப்போது இணையதளம் தொடங்கப்படும்போதே 'entity' பட்டியல் தானாகவே ஏற்றப்படுகிறது — கூடுதல் நடவடிக்கைகள் எதுவும் தேவையில்லை!</div>
+    <div class="popup-thanks">நன்றி.</div>
+    <button class="popup-ok-btn" id="noticeOkBtn">OK</button>
+  </div>
+</div>
 
 <header class="app-header">
   <div class="app-header-left">
@@ -770,6 +853,14 @@ async function loadEntitiesJson() {
 }
 
 loadEntitiesJson();
+
+// ── Notice popup ────────────────────────────────
+const noticeOverlay = document.getElementById('noticeOverlay');
+function closeNoticePopup() { noticeOverlay.style.display = 'none'; }
+document.getElementById('noticeOkBtn').addEventListener('click', closeNoticePopup);
+noticeOverlay.addEventListener('click', (e) => {
+  if (e.target === noticeOverlay) closeNoticePopup();
+});
 
 // ── Read XHTML file as text ────────────────────
 function readFileAsText(file) {
