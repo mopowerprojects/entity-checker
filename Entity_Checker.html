@@ -663,10 +663,21 @@ input[type="file"] { display: none; }
   margin-bottom: 12px;
 }
 
+.popup-highlight {
+  background: var(--orange-light);
+  border-left: 3px solid var(--orange);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--gray-900);
+  margin-bottom: 12px;
+}
+
 .popup-thanks {
   font-size: 14px;
   text-align: center;
   color: var(--gray-600);
+  margin-top: 16px;
   margin-bottom: 20px;
 }
 
@@ -702,6 +713,7 @@ input[type="file"] { display: none; }
   <div class="popup-card">
     <div class="popup-title">அறிவிப்பு</div>
     <div class="popup-body">Excel வசதி நீக்கப்பட்டுவிட்டது. இனி நீங்கள் Excel File இணைக்கவோ அல்லது பதிவேற்றவோ தேவையில்லை. இப்போது இணையதளம் தொடங்கப்படும்போதே 'entity' பட்டியல் தானாகவே ஏற்றப்படுகிறது — கூடுதல் நடவடிக்கைகள் எதுவும் தேவையில்லை!</div>
+    <div class="popup-highlight">மேலும், அனைத்து 'entities' காண்பிக்கப் பயன்படும் 'Entity' என்ற ஒரு தாவலும் (tab) உள்ளது.</div>
     <div class="popup-thanks">நன்றி.</div>
     <button class="popup-ok-btn" id="noticeOkBtn">OK</button>
   </div>
