@@ -5,7 +5,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Entity Checker</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --orange: #f97316;
@@ -124,6 +123,56 @@ body {
   padding: 32px 24px;
   flex: 1;
   width: 100%;
+}
+
+/* Tabs */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 32px;
+}
+
+.tab-btn {
+  border: none;
+  background: none;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover { color: var(--orange); }
+
+.tab-btn.active {
+  color: var(--orange);
+  border-bottom-color: var(--orange);
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.entities-placeholder {
+  background: white;
+  border-radius: var(--radius);
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--gray-400);
+  font-size: 13px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+}
+
+.entities-table-wrap {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
 }
 
 .step-body {
@@ -589,34 +638,45 @@ input[type="file"] { display: none; }
     </div>
   </div>
   <div class="app-header-right">
-    <input type="file" id="entity-file-input" accept=".xlsx" style="display:none"/>
-    <button class="browse-btn" onclick="document.getElementById('entity-file-input').click()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Select Entities_List.xlsx</button>
-    <div class="entity-status loading" id="entityStatus">No entity list selected</div>
+    <div class="entity-status loading" id="entityStatus">Loading entities...</div>
   </div>
 </header>
 
+<div class="tab-bar">
+  <button class="tab-btn active" id="tabBtnChecker" onclick="switchTab('checker')">Checker</button>
+  <button class="tab-btn" id="tabBtnEntities" onclick="switchTab('entities')">Entities</button>
+</div>
+
 <div class="main-content">
 
-  <div class="step-card">
-    <div class="step-header">
-      <div class="step-number">01</div>
-      <div>
-        <div class="step-title">Select XHTML Folder</div>
-        <div class="step-subtitle">Choose the root directory containing your source documents for unencoded entity scanning.</div>
+  <div class="tab-panel active" id="tabPanelChecker">
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-number">01</div>
+        <div>
+          <div class="step-title">Select XHTML Folder</div>
+          <div class="step-subtitle">Choose the root directory containing your source documents for unencoded entity scanning.</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <button class="browse-btn browse-btn-filled" id="selectFolderBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Browse Folder</button>
+        <input type="file" id="xhtml-folder" webkitdirectory multiple>
+        <div class="selected-path" id="folderPath"></div>
       </div>
     </div>
-    <div class="step-body">
-      <button class="browse-btn browse-btn-filled" id="selectFolderBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Browse Folder</button>
-      <input type="file" id="xhtml-folder" webkitdirectory multiple>
-      <div class="selected-path" id="folderPath"></div>
-    </div>
+
+    <button class="run-btn" id="checkBtn" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Check Entities</button>
+
+    <div id="summarySection"></div>
+
+    <div id="resultsSection"></div>
+
   </div>
 
-  <button class="run-btn" id="checkBtn" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Check Entities</button>
-
-  <div id="summarySection"></div>
-
-  <div id="resultsSection"></div>
+  <div class="tab-panel" id="tabPanelEntities">
+    <div id="entitiesTabContent"></div>
+  </div>
 
 </div>
 
@@ -672,49 +732,44 @@ function checkEnableRun() {
   updateCheckBtnState();
 }
 
-document.getElementById('entity-file-input').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+async function loadEntitiesJson() {
+  setEntityStatus('loading', 'Loading entities...');
+  try {
+    const res = await fetch('entities.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = await res.json();
 
-  setEntityStatus('loading', `Loading ${file.name}...`);
+    entityList = rows
+      .filter(r => r['Entity Name'])
+      .map(r => ({
+        name: String(r['Entity Name']),
+        decimal: r['Decimal'] || '',
+        hex: r['Hexadecimal'] || '',
+        char: r['Character'] || ''
+      }))
+      .filter(e => e.name.length > 0);
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const workbook = XLSX.read(e.target.result, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet);
-      entityList = rows
-        .filter(r => r['Entity Name'])
-        .map(r => ({
-          name: String(r['Entity Name']),
-          decimal: r['Decimal'] || '',
-          hex: r['Hexadecimal'] || '',
-          char: r['Character'] || ''
-        }))
-        .filter(e => e.name.length > 0);
+    entityListLoaded = entityList.length > 0;
 
-      entityListLoaded = entityList.length > 0;
-
-      // Show loaded status
-      if (entityListLoaded) {
-        setEntityStatus('loaded', entityList.length + ' entities loaded (' + file.name + ')');
-      } else {
-        setEntityStatus('error', 'No entities found in ' + file.name);
-      }
-
-      // Enable run button if folder also selected
-      checkEnableRun();
-    } catch (err) {
-      console.error(err);
-      entityList = [];
-      entityListLoaded = false;
-      setEntityStatus('error', 'Failed to read ' + file.name);
-      checkEnableRun();
+    if (entityListLoaded) {
+      setEntityStatus('loaded', entityList.length + ' entities loaded');
+    } else {
+      setEntityStatus('error', 'No entities found in entities.json');
     }
-  };
-  reader.readAsArrayBuffer(file);
-});
+
+    checkEnableRun();
+    renderEntitiesTab();
+  } catch (err) {
+    console.error(err);
+    entityList = [];
+    entityListLoaded = false;
+    setEntityStatus('error', 'Failed to load entities.json');
+    checkEnableRun();
+    renderEntitiesTab();
+  }
+}
+
+loadEntitiesJson();
 
 // ── Read XHTML file as text ────────────────────
 function readFileAsText(file) {
@@ -990,6 +1045,77 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
+// ── Tabs ────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tabBtnChecker').classList.toggle('active', tab === 'checker');
+  document.getElementById('tabBtnEntities').classList.toggle('active', tab === 'entities');
+  document.getElementById('tabPanelChecker').classList.toggle('active', tab === 'checker');
+  document.getElementById('tabPanelEntities').classList.toggle('active', tab === 'entities');
+}
+
+// ── Entities tab ────────────────────────────────
+function renderEntitiesTab() {
+  const container = document.getElementById('entitiesTabContent');
+
+  if (!entityListLoaded) {
+    container.innerHTML = `<div class="entities-placeholder">No entity list loaded yet. Select an Entities_List.xlsx file to view entities here.</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="results-header">
+      <div class="results-title-wrap">
+        <span class="results-title">Entities</span>
+        <span class="results-count-badge">${entityList.length} entit${entityList.length === 1 ? 'y' : 'ies'}</span>
+      </div>
+      <input type="text" class="search-input" id="entitySearch" placeholder="Search entities...">
+    </div>
+    <div class="entities-table-wrap">
+      <table class="entity-table">
+        <thead>
+          <tr>
+            <th>Character</th>
+            <th>Entity Name</th>
+            <th>Decimal</th>
+            <th>Hexadecimal</th>
+          </tr>
+        </thead>
+        <tbody id="entitiesTableBody"></tbody>
+      </table>
+      <p class="no-match-message" id="entityNoMatchMessage" hidden>No entities match your search.</p>
+    </div>
+  `;
+
+  renderEntitiesTableBody(entityList);
+  document.getElementById('entitySearch').addEventListener('input', filterEntitiesTable);
+}
+
+function renderEntitiesTableBody(list) {
+  const tbody = document.getElementById('entitiesTableBody');
+  tbody.innerHTML = list.map(e => `
+    <tr>
+      <td class="entity-char-cell">${escapeHtml(String(e.char))}</td>
+      <td>${escapeHtml(String(e.name))}</td>
+      <td class="entity-code-cell">${escapeHtml(String(e.decimal))}</td>
+      <td class="entity-code-cell">${escapeHtml(String(e.hex))}</td>
+    </tr>
+  `).join('');
+}
+
+function filterEntitiesTable() {
+  const term = document.getElementById('entitySearch').value.trim().toLowerCase();
+  const filtered = !term ? entityList : entityList.filter(e =>
+    String(e.name).toLowerCase().includes(term) ||
+    String(e.char).toLowerCase().includes(term) ||
+    String(e.decimal).toLowerCase().includes(term) ||
+    String(e.hex).toLowerCase().includes(term)
+  );
+  renderEntitiesTableBody(filtered);
+  document.getElementById('entityNoMatchMessage').hidden = filtered.length !== 0;
+}
+
+renderEntitiesTab();
 </script>
 
 </body>
