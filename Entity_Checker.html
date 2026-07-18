@@ -937,7 +937,7 @@ function renderResults(results) {
         }
         html += `
           <tr>
-            <td class="entity-char-cell">${escapeHtml(hit.name)}</td>
+            <td class="entity-char-cell" style="font-size:11px;color:#b45309;">${hit.notInList || hit.malformed ? 'Not in list' : escapeHtml(hit.name)}</td>
             <td class="entity-code-cell">${escapeHtml(String(hit.decimal))}</td>
             <td class="entity-code-cell">${escapeHtml(String(hit.hex))}</td>
             <td class="entity-code-cell">${escapeHtml(String(hit.char))}</td>
