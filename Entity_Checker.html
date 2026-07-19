@@ -8,7 +8,7 @@
 <style>
 :root {
   --orange: #f97316;
-  --orange-light: #fff7ed;
+  --orange-light: #fdc854;
   --blue: #3b82f6;
   --purple: #8b5cf6;
   --red: #ef4444;
@@ -173,6 +173,56 @@ body {
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--gray-200);
   overflow: hidden;
+}
+
+.entities-table-scroll {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+}
+
+.entities-table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--gray-50);
+}
+
+.alphabet-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.alphabet-btn {
+  min-width: 32px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-200);
+  background: white;
+  color: var(--gray-600);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.alphabet-btn:hover {
+  background: var(--orange-light);
+}
+
+.alphabet-btn.active {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: white;
+}
+
+.entities-visible-count {
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-bottom: 12px;
 }
 
 .step-body {
@@ -467,18 +517,29 @@ body {
   background: var(--gray-50);
   padding: 10px 16px;
   text-align: left;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--gray-400);
   border-bottom: 1px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .entity-table td {
   padding: 10px 16px;
   border-bottom: 1px solid var(--gray-100);
-  font-size: 13px;
+  font-size: 15px;
+}
+
+.entity-table td.entity-char-cell {
+  font-size: 20px;
+}
+
+.entity-table td.entity-code-cell {
+  font-size: 18px;
 }
 
 .entity-table tr:last-child td { border-bottom: none; }
@@ -614,91 +675,6 @@ input[type="file"] { display: none; }
   margin-top: 2px;
 }
 
-/* Notice popup */
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  opacity: 0;
-  animation: fadeInOverlay 0.25s ease forwards;
-}
-
-@keyframes fadeInOverlay {
-  to { opacity: 1; }
-}
-
-.popup-card {
-  background: white;
-  border-radius: var(--radius);
-  padding: 28px;
-  max-width: 420px;
-  width: 90%;
-  box-shadow: var(--shadow-md);
-  transform: translateY(-12px);
-  opacity: 0;
-  animation: fadeInCard 0.3s ease forwards 0.05s;
-}
-
-@keyframes fadeInCard {
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.popup-title {
-  font-weight: 700;
-  font-size: 18px;
-  text-align: center;
-  margin-bottom: 16px;
-  color: var(--gray-900);
-}
-
-.popup-body {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--gray-600);
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.popup-highlight {
-  background: var(--orange-light);
-  border-left: 3px solid var(--orange);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  color: var(--gray-900);
-  margin-bottom: 12px;
-}
-
-.popup-thanks {
-  font-size: 14px;
-  text-align: center;
-  color: var(--gray-600);
-  margin-top: 16px;
-  margin-bottom: 20px;
-}
-
-.popup-ok-btn {
-  display: block;
-  margin: 0 auto;
-  padding: 10px 32px;
-  background: var(--orange);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.popup-ok-btn:hover {
-  background: #ea6c00;
-}
-
 @media (max-width: 640px) {
   .summary-cards { grid-template-columns: 1fr; }
   .app-header { flex-direction: column; align-items: flex-start; }
@@ -708,16 +684,6 @@ input[type="file"] { display: none; }
 </style>
 </head>
 <body>
-
-<div class="popup-overlay" id="noticeOverlay">
-  <div class="popup-card">
-    <div class="popup-title">அறிவிப்பு</div>
-    <div class="popup-body">Excel வசதி நீக்கப்பட்டுவிட்டது. இனி நீங்கள் Excel File இணைக்கவோ அல்லது பதிவேற்றவோ தேவையில்லை. இப்போது இணையதளம் தொடங்கப்படும்போதே 'entity' பட்டியல் தானாகவே ஏற்றப்படுகிறது — கூடுதல் நடவடிக்கைகள் எதுவும் தேவையில்லை!</div>
-    <div class="popup-highlight">மேலும், அனைத்து 'entities' காண்பிக்கப் பயன்படும் 'Entity' என்ற ஒரு தாவலும் (tab) உள்ளது.</div>
-    <div class="popup-thanks">நன்றி.</div>
-    <button class="popup-ok-btn" id="noticeOkBtn">OK</button>
-  </div>
-</div>
 
 <header class="app-header">
   <div class="app-header-left">
@@ -865,14 +831,6 @@ async function loadEntitiesJson() {
 }
 
 loadEntitiesJson();
-
-// ── Notice popup ────────────────────────────────
-const noticeOverlay = document.getElementById('noticeOverlay');
-function closeNoticePopup() { noticeOverlay.style.display = 'none'; }
-document.getElementById('noticeOkBtn').addEventListener('click', closeNoticePopup);
-noticeOverlay.addEventListener('click', (e) => {
-  if (e.target === noticeOverlay) closeNoticePopup();
-});
 
 // ── Read XHTML file as text ────────────────────
 function readFileAsText(file) {
@@ -1158,6 +1116,8 @@ function switchTab(tab) {
 }
 
 // ── Entities tab ────────────────────────────────
+let entityActiveLetter = 'All';
+
 function renderEntitiesTab() {
   const container = document.getElementById('entitiesTabContent');
 
@@ -1165,6 +1125,9 @@ function renderEntitiesTab() {
     container.innerHTML = `<div class="entities-placeholder">No entity list loaded yet. Select an Entities_List.xlsx file to view entities here.</div>`;
     return;
   }
+
+  entityActiveLetter = 'All';
+  const letters = ['All', ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))];
 
   container.innerHTML = `
     <div class="results-header">
@@ -1174,48 +1137,86 @@ function renderEntitiesTab() {
       </div>
       <input type="text" class="search-input" id="entitySearch" placeholder="Search entities...">
     </div>
+    <div class="alphabet-filter-bar" id="alphabetFilterBar">
+      ${letters.map(l => `<button type="button" class="alphabet-btn${l === 'All' ? ' active' : ''}" data-letter="${l}">${l}</button>`).join('')}
+    </div>
+    <p class="entities-visible-count" id="entitiesVisibleCount"></p>
     <div class="entities-table-wrap">
-      <table class="entity-table">
-        <thead>
-          <tr>
-            <th>Character</th>
-            <th>Entity Name</th>
-            <th>Decimal</th>
-            <th>Hexadecimal</th>
-          </tr>
-        </thead>
-        <tbody id="entitiesTableBody"></tbody>
-      </table>
+      <div class="entities-table-scroll">
+        <table class="entity-table">
+          <thead>
+            <tr>
+              <th>Entity Name</th>
+              <th>Hexadecimal</th>
+              <th>Decimal</th>
+              <th>Character</th>
+            </tr>
+          </thead>
+          <tbody id="entitiesTableBody"></tbody>
+        </table>
+      </div>
       <p class="no-match-message" id="entityNoMatchMessage" hidden>No entities match your search.</p>
     </div>
   `;
 
   renderEntitiesTableBody(entityList);
+  updateEntitiesVisibleCount(entityList.length);
   document.getElementById('entitySearch').addEventListener('input', filterEntitiesTable);
+  document.getElementById('alphabetFilterBar').addEventListener('click', (e) => {
+    const btn = e.target.closest('.alphabet-btn');
+    if (!btn) return;
+    entityActiveLetter = btn.dataset.letter;
+    document.querySelectorAll('.alphabet-btn').forEach(b => b.classList.toggle('active', b === btn));
+    filterEntitiesTable();
+  });
 }
 
 function renderEntitiesTableBody(list) {
   const tbody = document.getElementById('entitiesTableBody');
   tbody.innerHTML = list.map(e => `
     <tr>
-      <td class="entity-char-cell">${escapeHtml(String(e.char))}</td>
       <td>${escapeHtml(String(e.name))}</td>
-      <td class="entity-code-cell">${escapeHtml(String(e.decimal))}</td>
       <td class="entity-code-cell">${escapeHtml(String(e.hex))}</td>
+      <td class="entity-code-cell">${escapeHtml(String(e.decimal))}</td>
+      <td class="entity-char-cell">${escapeHtml(String(e.char))}</td>
     </tr>
   `).join('');
 }
 
+function updateEntitiesVisibleCount(visible) {
+  document.getElementById('entitiesVisibleCount').textContent =
+    `Showing ${visible} of ${entityList.length} entities`;
+}
+
 function filterEntitiesTable() {
   const term = document.getElementById('entitySearch').value.trim().toLowerCase();
-  const filtered = !term ? entityList : entityList.filter(e =>
-    String(e.name).toLowerCase().includes(term) ||
-    String(e.char).toLowerCase().includes(term) ||
-    String(e.decimal).toLowerCase().includes(term) ||
-    String(e.hex).toLowerCase().includes(term)
-  );
+
+  let filtered = entityList;
+  if (entityActiveLetter !== 'All') {
+    const prefix = '&' + entityActiveLetter.toLowerCase();
+    filtered = filtered.filter(e => String(e.char).toLowerCase().startsWith(prefix));
+  }
+  if (term) {
+    filtered = filtered.filter(e =>
+      String(e.name).toLowerCase().includes(term) ||
+      String(e.char).toLowerCase().includes(term) ||
+      String(e.decimal).toLowerCase().includes(term) ||
+      String(e.hex).toLowerCase().includes(term)
+    );
+  }
+
   renderEntitiesTableBody(filtered);
-  document.getElementById('entityNoMatchMessage').hidden = filtered.length !== 0;
+  updateEntitiesVisibleCount(filtered.length);
+
+  const noMatch = document.getElementById('entityNoMatchMessage');
+  if (filtered.length !== 0) {
+    noMatch.hidden = true;
+  } else {
+    noMatch.hidden = false;
+    noMatch.textContent = entityActiveLetter !== 'All' && !term
+      ? `No entities found for '${entityActiveLetter}'`
+      : 'No entities match your search.';
+  }
 }
 
 renderEntitiesTab();
