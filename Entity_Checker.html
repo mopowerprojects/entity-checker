@@ -776,11 +776,11 @@ document.getElementById('selectFolderBtn').addEventListener('click', () => folde
 
 folderInput.addEventListener('change', () => {
   const allFiles = Array.from(folderInput.files);
-  selectedXhtmlFiles = allFiles.filter(f => /\.xhtml$/i.test(f.name));
+  selectedXhtmlFiles = allFiles.filter(f => /\.(xhtml|xml)$/i.test(f.name));
 
   folderPathEl.classList.add('visible');
   if (selectedXhtmlFiles.length === 0) {
-    folderPathEl.textContent = 'No .xhtml files found in selected folder';
+    folderPathEl.textContent = 'No .xhtml or .xml files found in selected folder';
   } else {
     const folderName = selectedXhtmlFiles[0].webkitRelativePath.split('/')[0];
     folderPathEl.textContent = `${folderName}/  —  ${selectedXhtmlFiles.length} .xhtml file(s) found`;
